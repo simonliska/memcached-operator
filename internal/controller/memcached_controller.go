@@ -36,8 +36,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	cachev1alpha1 "github.com/example/memcached-operator/api/v1alpha1"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const memcachedFinalizer = "cache.example.com/finalizer"
@@ -55,6 +57,20 @@ type MemcachedReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+}
+
+var (
+	MemcachedDeploymentSizeUndesiredCountTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "memcached_deployment_size_undesired_count_total",
+			Help: "Total number of times the deployment size was not as desired.",
+		},
+	)
+)
+
+// RegisterMetrics will register metrics with the global prometheus registry
+func RegisterMetrics() {
+	metrics.Registry.MustRegister(MemcachedDeploymentSizeUndesiredCountTotal)
 }
 
 // The following markers are used to generate the rules permissions (RBAC) on config/rbac using controller-gen
